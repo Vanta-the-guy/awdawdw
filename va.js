@@ -1,13 +1,10 @@
-// --- YOUR ASSET URLS ---
 const GNMATH_API = "https://cdn.jsdelivr.net/gh/freebuisness/assets@main/zones.json";
 const GNMATH_COVER = "https://cdn.jsdelivr.net/gh/freebuisness/covers@main";
 const GNMATH_HTML = "https://cdn.jsdelivr.net/gh/freebuisness/html@main";
-
 const UGS_API = "https://cdn.jsdelivr.net/gh/Sea-Math/ugs-json@main/games.json";
 const UGS_HTML_URL1 = "https://cdn.jsdelivr.net/gh/Sea-Math/ugs-1@main";
 const UGS_HTML_URL2 = "https://cdn.jsdelivr.net/gh/Sea-Math/ugs-2@main";
 const UGS_HTML_URL3 = "https://cdn.jsdelivr.net/gh/Sea-Math/ugs-3@main";
-
 const DAKNUX_API_URLS = [
     "https://cdn.jsdelivr.net/gh/daknux/assets@latest/zones.json",
     "https://cdn.jsdelivr.net/gh/daknux/assets@master/zones.json"
@@ -15,9 +12,7 @@ const DAKNUX_API_URLS = [
 let DAKNUX_API = DAKNUX_API_URLS[Math.floor(Math.random() * DAKNUX_API_URLS.length)];
 const DAKNUX_COVER = "https://cdn.jsdelivr.net/gh/daknux/covers@main";
 const DAKNUX_HTML = "https://cdn.jsdelivr.net/gh/daknux/html@main";
-
 const FALLBACK_IMAGE = "https://s3.envato.com/files/fed15e2f-5abf-4758-a1a2-3e3d68013f0d/inline_image_preview.jpg";
-// -----------------------
 
 class VantaSDK {
     constructor() {
@@ -28,30 +23,21 @@ class VantaSDK {
         this.currentSource = "All";
         this.currentGameUrl = "";
         this.currentGameHtml = "";
-        this.isClearMode = false; // Tracks if Clear Mode is active
         
-        // Default Config (fully customizable via init options)
         this.config = {
             container: '#games',
-            theme: '#5c6bc0',
             columns: 8,
             rows: 4,
             gamesPerPage: 32,
-            borderRadius: '16px',
-            fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            defaultClearMode: false
+            fontFamily: "'Inter', 'Poppins', 'Segoe UI', sans-serif"
         };
     }
 
     async init(options) {
         this.config = { ...this.config, ...options };
-        this.isClearMode = this.config.defaultClearMode;
         this.container = document.querySelector(this.config.container);
         
-        if (!this.container) {
-            console.error("Vanta SDK: Container not found!");
-            return;
-        }
+        if (!this.container) return;
 
         this.injectStyles();
         this.buildUI();
@@ -59,189 +45,131 @@ class VantaSDK {
         this.applyFilters();
     }
 
-    hexToRgb(hex) {
-        let cleanHex = hex.replace('#', '');
-        if (cleanHex.length === 3) cleanHex = cleanHex.split('').map(c => c + c).join('');
-        if (cleanHex.length !== 6) return { r: 92, g: 107, b: 192 }; // Fallback
-        let num = parseInt(cleanHex, 16);
-        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
-    }
-
-    hexToDarker(hex, percent) {
-        const rgb = this.hexToRgb(hex);
-        const r = Math.max(0, Math.floor(rgb.r * (1 - percent)));
-        const g = Math.max(0, Math.floor(rgb.g * (1 - percent)));
-        const b = Math.max(0, Math.floor(rgb.b * (1 - percent)));
-        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-    }
-
-    hexToLighter(hex, percent) {
-        const rgb = this.hexToRgb(hex);
-        const r = Math.min(255, Math.floor(rgb.r + (255 - rgb.r) * percent));
-        const g = Math.min(255, Math.floor(rgb.g + (255 - rgb.g) * percent));
-        const b = Math.min(255, Math.floor(rgb.b + (255 - rgb.b) * percent));
-        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-    }
-
     injectStyles() {
-        if (document.getElementById('vanta-dynamic-styles')) {
-            document.getElementById('vanta-dynamic-styles').remove();
+        if (document.getElementById('vanta-styles')) {
+            document.getElementById('vanta-styles').remove();
         }
 
         const style = document.createElement('style');
-        style.id = 'vanta-dynamic-styles';
-        
-        const primary = this.config.theme.startsWith('#') ? this.config.theme : '#5c6bc0';
-        const primaryRgb = this.hexToRgb(primary);
-        const darkerShade = this.hexToDarker(primary, 0.25);
-        const inputBg = this.hexToLighter(primary, 0.15);
-        const color = '#ffffff';
+        style.id = 'vanta-styles';
         
         style.innerHTML = `
-            :root {
-                --vanta-primary: ${primary};
-                --vanta-darker: ${darkerShade};
-                --vanta-input: ${inputBg};
-                --vanta-text: ${color};
-                --vanta-radius: ${this.config.borderRadius};
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100%;
+                height: 100vh;
+                overflow: hidden;
+                background: #000000;
             }
-
-            /* BASE STYLES */
             .vanta-wrapper {
                 font-family: ${this.config.fontFamily};
-                background: var(--vanta-primary);
-                color: var(--vanta-text);
-                padding: 24px;
-                border-radius: var(--vanta-radius);
-                box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+                background: #000000;
+                color: #ffffff;
+                width: 100vw;
+                height: 100vh;
+                padding: 2vh 2vw;
                 box-sizing: border-box;
-                transition: all 0.4s ease;
-                border: 1px solid transparent;
+                display: flex;
+                flex-direction: column;
             }
             .vanta-wrapper *, .vanta-wrapper *::before, .vanta-wrapper *::after {
                 box-sizing: border-box;
             }
-
-            /* CLEAR MODE (GLASSMORPHISM) */
-            .vanta-wrapper.clear-mode {
-                background: rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.25);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            .vanta-menu-view {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                width: 100%;
             }
-            .vanta-wrapper.clear-mode .vanta-search, 
-            .vanta-wrapper.clear-mode .vanta-source-select,
-            .vanta-wrapper.clear-mode .vanta-page-btn {
-                background: rgba(255, 255, 255, 0.1);
-                border-color: rgba(255, 255, 255, 0.2);
-                backdrop-filter: blur(10px);
+            .vanta-header { 
+                flex-shrink: 0; 
+                display: flex; 
+                gap: 1vw; 
+                margin-bottom: 2vh; 
+                align-items: center; 
             }
-            .vanta-wrapper.clear-mode .vanta-btn,
-            .vanta-wrapper.clear-mode .vanta-action-btn {
-                background: rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.6);
-                border: 1px solid rgba(255,255,255,0.3);
-            }
-            .vanta-wrapper.clear-mode .vanta-btn:hover,
-            .vanta-wrapper.clear-mode .vanta-action-btn:hover {
-                background: rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.8);
-            }
-
-            /* HEADER & INPUTS */
-            .vanta-header { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
             .vanta-search {
-                flex-grow: 1; padding: 14px 18px; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
-                background: var(--vanta-input); color: var(--vanta-text); font-size: 15px; outline: none; transition: all 0.3s ease;
-                box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+                flex-grow: 1; padding: 1.5vh 1.5vw; border: 1px solid #222; border-radius: 8px;
+                background: #0a0a0a; color: #fff; font-size: max(14px, 1vw); outline: none; transition: all 0.3s ease;
             }
-            .vanta-search:focus { border-color: rgba(255,255,255,0.6); box-shadow: 0 0 0 4px rgba(255,255,255,0.15), inset 0 2px 4px rgba(0,0,0,0.1); }
-            .vanta-search::placeholder { color: rgba(255, 255, 255, 0.7); }
-            
+            .vanta-search:focus { border-color: #555; }
+            .vanta-search::placeholder { color: #666; }
             .vanta-source-select {
-                padding: 14px 18px; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
-                background: var(--vanta-input); color: var(--vanta-text); font-size: 15px; outline: none; cursor: pointer;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s ease;
+                padding: 1.5vh 1.5vw; border: 1px solid #222; border-radius: 8px;
+                background: #0a0a0a; color: #fff; font-size: max(14px, 1vw); outline: none; cursor: pointer; transition: all 0.3s ease;
             }
-            .vanta-source-select:hover { border-color: rgba(255,255,255,0.4); }
-            
+            .vanta-source-select:hover { background: #111; border-color: #444; }
             .vanta-btn {
-                background: var(--vanta-darker); color: white; border: 1px solid transparent; padding: 14px 26px;
-                border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                background: #ffffff; color: #000000; border: none; padding: 1.5vh 2vw;
+                border-radius: 8px; cursor: pointer; font-size: max(13px, 0.9vw); font-weight: 700; transition: all 0.2s ease;
+                text-transform: uppercase;
             }
-            .vanta-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+            .vanta-btn:hover { background: #e0e0e0; transform: translateY(-2px); }
             .vanta-btn:active { transform: translateY(1px); }
-
-            /* TOGGLE CLEAR MODE BUTTON */
-            .vanta-toggle-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); }
-            .vanta-toggle-btn:hover { background: rgba(255,255,255,0.25); }
-
-            /* GRID & CARDS */
             .vanta-grid {
-                display: grid; grid-template-columns: repeat(${this.config.columns}, 1fr); gap: 16px;
+                flex-grow: 1;
+                display: grid; 
+                grid-template-columns: repeat(${this.config.columns}, 1fr); 
+                grid-template-rows: repeat(${this.config.rows}, 1fr);
+                gap: 1.5vh 1vw;
+                min-height: 0;
             }
             .vanta-game-card {
-                background: #111; border-radius: 12px; overflow: hidden; position: relative;
-                box-shadow: 0 6px 12px rgba(0,0,0,0.3); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                cursor: pointer; aspect-ratio: 1; border: 1px solid rgba(255,255,255,0.05);
+                background: #050505; border-radius: 12px; overflow: hidden; position: relative;
+                transition: all 0.2s ease; cursor: pointer; border: 1px solid #1a1a1a;
+                width: 100%; height: 100%;
             }
-            .vanta-game-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 16px 30px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.3); }
-            .vanta-game-img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s ease, transform 0.3s ease; }
-            .vanta-game-card:hover .vanta-game-img { filter: brightness(0.8); transform: scale(1.05); }
-            
+            .vanta-game-card:hover { transform: scale(1.02); border-color: #444; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 10; }
+            .vanta-game-img { width: 100%; height: 100%; object-fit: cover; transition: all 0.3s ease; }
+            .vanta-game-card:hover .vanta-game-img { filter: brightness(0.6); transform: scale(1.05); }
             .vanta-badge {
-                position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
-                color: white; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; z-index: 2;
-                border: 1px solid rgba(255,255,255,0.1); letter-spacing: 0.5px;
+                position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.9);
+                color: white; font-size: max(9px, 0.7vw); font-weight: 700; padding: 4px 8px; border-radius: 6px; z-index: 2;
+                border: 1px solid #333; text-transform: uppercase;
             }
             .vanta-game-title-overlay {
                 position: absolute; bottom: 0; left: 0; width: 100%;
-                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 50%, transparent 100%);
-                color: #fff; padding: 24px 10px 12px 10px; font-size: 13px; font-weight: 600;
-                text-align: center; opacity: 0; transition: opacity 0.3s ease-in-out; pointer-events: none;
-                z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+                background: linear-gradient(to top, #000 0%, rgba(0,0,0,0.9) 60%, transparent 100%);
+                color: #fff; padding: 20px 10px 10px 10px; font-size: max(12px, 0.9vw); font-weight: 700;
+                text-align: center; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; z-index: 2;
             }
             .vanta-game-card:hover .vanta-game-title-overlay { opacity: 1; }
-
-            /* PAGINATION */
-            .vanta-pagination { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
-            .vanta-page-btn {
-                padding: 10px 16px; border: 1px solid rgba(255,255,255,0.15); background: var(--vanta-input);
-                color: var(--vanta-text); border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;
+            .vanta-pagination { 
+                flex-shrink: 0; 
+                display: flex; 
+                justify-content: center; 
+                gap: 0.5vw; 
+                margin-top: 2vh; 
             }
-            .vanta-page-btn:hover { background: var(--vanta-darker); border-color: rgba(255,255,255,0.4); }
-            .vanta-page-btn.active { background: var(--vanta-darker); border-color: rgba(255,255,255,0.6); font-weight: 700; }
-
-            /* GAME VIEW (IFRAME) */
+            .vanta-page-btn {
+                padding: 1vh 1.5vw; border: 1px solid #222; background: #0a0a0a;
+                color: #fff; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-weight: 600; font-size: max(13px, 0.9vw);
+            }
+            .vanta-page-btn:hover { background: #1a1a1a; border-color: #555; }
+            .vanta-page-btn.active { background: #fff; color: #000; border-color: #fff; }
             .vanta-game-view {
-                display: none; position: relative; width: 100%; height: 80vh;
-                background: #050505; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                border: 1px solid rgba(255,255,255,0.1);
+                display: none; position: relative; width: 100%; height: 100%;
+                background: #000; border-radius: 12px; overflow: hidden; border: 1px solid #222;
             }
             .vanta-iframe { width: 100%; height: 100%; border: none; background: #fff; }
             .vanta-toolbar {
-                position: absolute; top: 16px; left: 16px; display: flex; gap: 10px; z-index: 10;
+                position: absolute; top: 12px; left: 12px; display: flex; gap: 10px; z-index: 10;
             }
             .vanta-action-btn {
-                background: var(--vanta-darker); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 10px 18px;
-                border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-                transition: all 0.2s ease; backdrop-filter: blur(4px);
+                background: #0a0a0a; color: #fff; border: 1px solid #333; padding: 10px 16px;
+                border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px; transition: all 0.2s ease;
             }
-            .vanta-action-btn:hover { filter: brightness(1.15); transform: translateY(-2px); }
-            .vanta-back-btn { background: rgba(229, 57, 53, 0.9); }
-            .vanta-back-btn:hover { background: #d32f2f; }
-            
-            /* RESPONSIVE DESIGN */
-            @media (max-width: 1200px) { .vanta-grid { grid-template-columns: repeat(6, 1fr); } }
-            @media (max-width: 800px) { .vanta-grid { grid-template-columns: repeat(4, 1fr); } }
-            @media (max-width: 500px) { .vanta-grid { grid-template-columns: repeat(2, 1fr); } }
+            .vanta-action-btn:hover { background: #1a1a1a; border-color: #fff; }
+            .vanta-back-btn { background: #aa2e25; border-color: #d32f2f; }
+            .vanta-back-btn:hover { background: #d32f2f; border-color: #f44336; }
         `;
         document.head.appendChild(style);
     }
 
     buildUI() {
         this.container.innerHTML = `
-            <div class="vanta-wrapper ${this.isClearMode ? 'clear-mode' : ''}" id="vanta-main-wrapper">
+            <div class="vanta-wrapper" id="vanta-main-wrapper">
                 <div class="vanta-menu-view">
                     <div class="vanta-header">
                         <select class="vanta-source-select">
@@ -251,8 +179,7 @@ class VantaSDK {
                             <option value="Daknux">Daknux</option>
                         </select>
                         <input type="text" class="vanta-search" placeholder="Search games...">
-                        <button class="vanta-btn vanta-random-btn">Random</button>
-                        <button class="vanta-btn vanta-toggle-btn">âœ¨ Clear Mode</button>
+                        <button class="vanta-btn vanta-random-btn">Random Game</button>
                     </div>
                     <div class="vanta-grid"></div>
                     <div class="vanta-pagination"></div>
@@ -274,9 +201,7 @@ class VantaSDK {
         this.pagination = this.container.querySelector('.vanta-pagination');
         this.searchInput = this.container.querySelector('.vanta-search');
         this.sourceSelect = this.container.querySelector('.vanta-source-select');
-        
         this.randomBtn = this.container.querySelector('.vanta-random-btn');
-        this.toggleClearBtn = this.container.querySelector('.vanta-toggle-btn');
 
         this.gameView = this.container.querySelector('.vanta-game-view');
         this.iframe = this.container.querySelector('.vanta-iframe');
@@ -284,7 +209,6 @@ class VantaSDK {
         this.aboutBlankBtn = this.container.querySelector('.vanta-aboutblank-btn');
         this.fullscreenBtn = this.container.querySelector('.vanta-fullscreen-btn');
 
-        // Event Listeners
         this.searchInput.addEventListener('input', (e) => {
             this.currentSearch = e.target.value;
             this.applyFilters();
@@ -293,15 +217,6 @@ class VantaSDK {
         this.sourceSelect.addEventListener('change', (e) => {
             this.currentSource = e.target.value;
             this.applyFilters();
-        });
-
-        this.toggleClearBtn.addEventListener('click', () => {
-            this.isClearMode = !this.isClearMode;
-            if (this.isClearMode) {
-                this.wrapper.classList.add('clear-mode');
-            } else {
-                this.wrapper.classList.remove('clear-mode');
-            }
         });
 
         this.randomBtn.addEventListener('click', () => this.playRandom());
@@ -359,7 +274,6 @@ class VantaSDK {
             catch (e) { return []; }
         };
 
-        // 1. GNMath Games
         const gnmathData = await fetchJSON(GNMATH_API);
         gnmathData.forEach(g => {
             const cleanUrlParam = this.cleanPath(g.url);
@@ -373,7 +287,6 @@ class VantaSDK {
             });
         });
 
-        // 2. UGS Games
         const ugsData = await fetchJSON(UGS_API);
         ugsData.forEach(g => {
             let ugsHtmlBase = UGS_HTML_URL1;
@@ -408,7 +321,6 @@ class VantaSDK {
             });
         });
 
-        // 3. Daknux Games
         const daknuxData = await fetchJSON(DAKNUX_API);
         daknuxData.forEach(g => {
             const cleanUrlParam = this.cleanPath(g.url);
@@ -471,7 +383,6 @@ class VantaSDK {
             btn.onclick = () => {
                 this.currentPage = page; 
                 this.updateView(); 
-                this.wrapper.scrollIntoView({ behavior: 'smooth' });
             };
             fragment.appendChild(btn);
         };
@@ -514,7 +425,7 @@ class VantaSDK {
 
     closeGame() {
         this.gameView.style.display = 'none';
-        this.menuView.style.display = 'block';
+        this.menuView.style.display = 'flex';
         this.iframe.srcdoc = '';
         this.iframe.src = '';
         this.currentGameUrl = "";
